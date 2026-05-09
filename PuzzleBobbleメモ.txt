@@ -1,0 +1,41 @@
+PuzzleBobbleメモ
+
+Shooterクラス
+プレイヤーが操作する発射台のクラス
+
+角度管理 (angle): バブルを打ち出す方向をラジアンで保持しています。初期値の DX_PI_F / 2.0f は真上を指します。
+
+操作 (Update): Aキーで反時計回り（角度増加）、Dキーで時計回り（角度減少）に回転します。
+
+制限 (GameConfig::Clamp): 砲台が真横や下を向かないように、角度を一定の範囲（0.2〜π-0.2）に制限しています。
+
+描画 (Draw): cosf と sinf を使い、現在の角度に合わせて「ガイド線」を一本描画します。
+
+
+Bulletクラス（発射される弾）
+発射されたバブルの移動と衝突の挙動を管理します。
+
+発射: 砲台の角度と色を受け取り、速度ベクトル（vel）を計算します。
+
+vel.x = cosf(angle) * Speed
+
+vel.y = -sinf(angle) * Speed
+
+反射ロジック: Update 関数内で左右の壁に当たったかどうかを判定し、当たった場合は vel.x を反転（-1.0f を掛ける）させることで「反射」を表現しています。
+
+無効化: 画面外（上下）に出た場合は active = false になり、再発射が可能になります。
+
+スペースキーでのトリガーについて
+int currentSpaceState = CheckHitKey(KEY_INPUT_SPACE);
+if (currentSpaceState && !lastSpaceState && !bullet.IsActive()) { ... }
+lastSpaceState = currentSpaceState;
+
+パズルボブルにおいて弾が連射できてしまうのはよくないので、「今押されている」というのと「前回押されていなかった」
+という条件を付けていい感じにしています
+
+衝突検知: bm.CheckCollision でバブルに当たったか判定しています
+
+バブル設置: bm.SetBubble で、弾が止まった位置にバブルを固定します。
+
+連鎖処理: bm.ProcessChain を呼び出し、同じ色のバブルが3つ以上並んだかを確認して削除します。
+ですが、今は少し変な挙動をしています。
